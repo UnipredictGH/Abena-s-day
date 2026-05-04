@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Birthday Call</title>
+    <style>
+        :root { --ios-green: #4cd964; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: -apple-system, sans-serif; background: #000; color: white; overflow: hidden; touch-action: none; }
+        .bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, #2b0c04 0%, #000000 100%); z-index: -1; }
+        
+        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        #start-btn { padding: 18px 36px; background: var(--ios-green); border: none; border-radius: 30px; color: white; font-size: 1.2rem; font-weight: 600; }
+
+        #call-screen { display: none; flex-direction: column; align-items: center; justify-content: space-between; height: 100vh; padding: 80px 0 60px 0; box-sizing: border-box; }
+        .day-display { font-size: 8rem; font-weight: 700; margin: 0; line-height: 1; }
+        .month-display { font-size: 2.2rem; letter-spacing: 12px; text-transform: uppercase; border-bottom: 2px solid white; padding-bottom: 5px; display: inline-block; }
+
+        .slide-section { width: 100%; display: flex; justify-content: center; margin-bottom: 40px; }
+        .track { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); width: 320px; height: 80px; border-radius: 40px; display: flex; align-items: center; position: relative; }
+        .thumb { width: 72px; height: 72px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; left: 4px; z-index: 10; transition: left 0.1s ease-out; }
+        .thumb svg { fill: var(--ios-green); width: 35px; }
+        .slide-text { width: 100%; text-align: center; font-size: 1.1rem; padding-left: 40px; color: rgba(255, 255, 255, 0.5); }
+
+        #video-screen { display: none; position: fixed; inset: 0; z-index: 3000; background: #000; }
+        video { width: 100%; height: 100%; object-fit: contain; }
+        
+        #loading-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1rem; opacity: 0.7; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div class="bg"></div>
+
+    <div id="overlay">
+        <button id="start-btn">fine ass shawty👇</button>
+    </div>
+
+    <audio id="ringtone" loop><source src="ringtone.m4a" type="audio/mpeg"></audio>
+
+    <div id="call-screen">
+        <div style="text-align:center">
+            <h1 style="font-family:cursive; font-size:3rem; margin:0;">Happy 16th</h1>
+            <p style="letter-spacing:5px; opacity:0.8;">ABENA</p>
+            <p class="day-display" id="day-counter">25</p>
+            <p class="month-display">MAY</p>
+        </div>
+
+        <div class="slide-section">
+            <div class="track" id="track">
+                <div class="thumb" id="slider">
+                    <svg viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/></svg>
+                </div>
+                <span class="slide-text">slide to answer</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="video-screen">
+        <div id="loading-msg">Loading Video...</div>
+        <video id="birthday-video" playsinline webkit-playsinline preload="auto">
+            <source src="gift%20image.MOV" type="video/quicktime">
+        </video>
+    </div>
+
+    <script>
+        const ringtone = document.getElementById('ringtone');
+        const video = document.getElementById('birthday-video');
+        const slider = document.getElementById('slider');
+        const track = document.getElementById('track');
+        const dayCounter = document.getElementById('day-counter');
+
+        document.getElementById('start-btn').addEventListener('click', function() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('call-screen').style.display = 'flex';
+            
+            // Start buffering immediately
+            ringtone.load();
+            video.load(); 
+            
+            // 3-second animation sequence
+            let points = [25,26,27,28,29,30,31,1,2,3,4];
+            let idx = 0;
+            let intervalTime = 3000 / points.length; // Precisely 3 seconds total
+            
+            let timer = setInterval(() => {
+                if(idx < points.length) { 
+                    dayCounter.innerText = points[idx++]; 
+                } else { 
+                    clearInterval(timer); 
+                    ringtone.play().catch(() => {}); 
+                }
+            }, intervalTime);
+        });
+
+        let active = false, startX = 0;
+        slider.addEventListener('touchstart', e => { 
+            active = true; 
+            startX = e.touches[0].clientX; 
+            slider.style.transition = 'none';
+        });
+
+        document.addEventListener('touchmove', e => {
+            if (!active) return;
+            let x = e.touches[0].clientX - startX;
+            let max = track.offsetWidth - 80;
+            if (x > 0 && x <= max) slider.style.left = x + 'px';
+            
+            if (x >= max) {
+                active = false;
+                ringtone.pause();
+                document.getElementById('call-screen').style.display = 'none';
+                document.getElementById('video-screen').style.display = 'block';
+                
+                video.muted = false;
+                video.play().then(() => {
+                    document.getElementById('loading-msg').style.display = 'none';
+                }).catch(() => {
+                    video.muted = true;
+                    video.play();
+                    document.getElementById('loading-msg').innerText = "Tap to unmute";
+                });
+            }
+        });
+
+        document.addEventListener('touchend', () => { 
+            if(active){ 
+                active = false; 
+                slider.style.transition = 'left 0.3s ease';
+                slider.style.left = '4px'; 
+            } 
+        });
+        
+        video.addEventListener('click', () => { 
+            video.muted = false; 
+            document.getElementById('loading-msg').style.display = 'none'; 
+        });
+    </script>
+</body>
+</html>
