@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Incoming Call</title>
+    <style>
+        :root {
+            --ios-green: #4cd964;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+            background: #000; color: white; overflow: hidden;
+        }
+
+        .bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, #2b0c04 0%, #000000 100%);
+            z-index: -1;
+        }
+
+        #overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #start-btn {
+            padding: 18px 36px; background: var(--ios-green); border: none;
+            border-radius: 30px; color: white; font-size: 1.2rem; font-weight: 600;
+        }
+
+        #call-screen {
+            display: none; flex-direction: column; align-items: center;
+            justify-content: space-between; height: 100vh; padding: 80px 0 60px 0;
+            box-sizing: border-box;
+        }
+
+        .header-text { text-align: center; }
+        .happy-birthday { 
+            font-family: "Apple Chancery", cursive; 
+            font-size: 3.5rem; 
+            margin-bottom: 0;
+            font-weight: 100;
+        }
+        
+        .day-display { font-size: 8rem; font-weight: 700; margin: 0; line-height: 1; }
+        .month-display { 
+            font-size: 2.2rem; 
+            letter-spacing: 12px; 
+            text-transform: uppercase; 
+            border-bottom: 2px solid white; 
+            padding-bottom: 5px;
+            display: inline-block;
+        }
+
+        .icons-container {
+            display: flex; justify-content: space-around; width: 80%; margin-top: 20px;
+        }
+        .icon-box { display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 0.85rem; opacity: 0.9; }
+        .icon-box svg { width: 28px; height: 28px; fill: white; }
+
+        .slide-section { width: 100%; display: flex; justify-content: center; margin-bottom: 40px; }
+        .track {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            width: 320px; height: 86px; border-radius: 43px;
+            display: flex; align-items: center; position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .thumb {
+            width: 78px; height: 78px; background: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            position: absolute; left: 4px; z-index: 10;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        .thumb svg { fill: var(--ios-green); width: 40px; height: 40px; }
+        .slide-text {
+            width: 100%; text-align: center; font-size: 1.2rem; padding-left: 50px;
+            color: rgba(255, 255, 255, 0.4); animation: shimmer 2.5s infinite;
+        }
+
+        @keyframes shimmer { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.8; } }
+
+        #video-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1500; background: #000; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+    </style>
+</head>
+<body>
+
+    <div class="bg"></div>
+
+    <div id="overlay">
+        <button id="start-btn">Accept Call</button>
+    </div>
+
+    <audio id="ringtone" loop>
+        <source src="ringtone.m4a" type="audio/mp4">
+    </audio>
+
+    <div id="call-screen">
+        <div class="header-text">
+            <h1 class="happy-birthday">Happy 16th</h1>
+            <p style="font-size: 1.2rem; margin: 10px 0 0 0; opacity: 0.8;">Alexander</p>
+            <p class="day-display" id="day-counter">29</p>
+            <p class="month-display">MAY</p>
+        </div>
+
+        <div class="icons-container">
+            <div class="icon-box">
+                <svg viewBox="0 0 24 24"><path d="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z"/></svg>
+                <span>Remind Me</span>
+            </div>
+            <div class="icon-box">
+                <svg viewBox="0 0 24 24"><path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M20,16H5.17L4,17.17V4H20V16Z"/></svg>
+                <span>Message</span>
+            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="track" id="track">
+                <div class="thumb" id="slider">
+                    <svg viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/></svg>
+                </div>
+                <span class="slide-text">slide to answer</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="video-screen">
+        <video id="birthday-video" playsinline>
+            <source src="gift%20image.MOV" type="video/quicktime">
+        </video>
+    </div>
+
+    <script>
+        const ringtone = document.getElementById('ringtone');
+        const video = document.getElementById('birthday-video');
+        const dayCounter = document.getElementById('day-counter');
+        const slider = document.getElementById('slider');
+        const track = document.getElementById('track');
+
+        document.getElementById('start-btn').addEventListener('click', function() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('call-screen').style.display = 'flex';
+            ringtone.play().then(() => ringtone.pause());
+            video.load();
+
+            // Count from 29 to 4 in 2 seconds
+            let start = 29;
+            let end = 4;
+            let current = start;
+            // Calculate interval to complete in 2000ms
+            // We need to hit 30, 31, then 1, 2, 3, 4
+            const points = [29, 30, 31, 1, 2, 3, 4];
+            let idx = 0;
+            const timer = setInterval(() => {
+                if (idx < points.length) {
+                    dayCounter.innerText = points[idx];
+                    idx++;
+                } else {
+                    clearInterval(timer);
+                    ringtone.play().catch(() => {});
+                }
+            }, 2000 / points.length); 
+        });
+
+        let active = false, startPos = 0;
+        slider.addEventListener('touchstart', (e) => {
+            active = true; startPos = e.touches[0].clientX;
+            slider.style.transition = 'none';
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!active) return;
+            let x = e.touches[0].clientX - startPos;
+            let max = track.offsetWidth - 84;
+            if (x > 0 && x <= max) slider.style.left = (4 + x) + 'px';
+            if (x >= max) {
+                active = false;
+                ringtone.pause();
+                document.getElementById('call-screen').style.display = 'none';
+                document.getElementById('video-screen').style.display = 'block';
+                video.play();
+            }
+        });
+
+        document.addEventListener('touchend', () => {
+            if (!active) return;
+            active = false;
+            slider.style.transition = 'left 0.3s ease';
+            slider.style.left = '4px';
+        });
+    </script>
+</body>
+</html>
