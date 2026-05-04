@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Birthday Surprise</title>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<style>
+
+/* =======================
+   🍏 iOS 17 STYLE BACKGROUND
+======================= */
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Arial;
+  background: black;
+}
+
+.ios-wallpaper {
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+  z-index: -1;
+  background: radial-gradient(circle at 20% 20%, #ff4ecd 0%, transparent 40%),
+              radial-gradient(circle at 80% 30%, #4c7dff 0%, transparent 45%),
+              radial-gradient(circle at 40% 80%, #7c4dff 0%, transparent 50%),
+              radial-gradient(circle at 60% 60%, #00d4ff 0%, transparent 45%),
+              linear-gradient(135deg, #050510, #000000);
+  animation: floatBG 12s ease-in-out infinite;
+}
+
+@keyframes floatBG {
+  0% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.05) translateY(-10px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+/* =======================
+   🔒 LOCK SCREEN
+======================= */
+#lockScreen {
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  z-index: 9999;
+}
+
+.time {
+  font-size: 70px;
+}
+
+.date {
+  font-size: 18px;
+  opacity: 0.8;
+  margin-bottom: 120px;
+}
+
+.swipe {
+  margin-bottom: 40px;
+  opacity: 0.7;
+  animation: bounce 1.5s infinite;
+}
+
+@keyframes bounce {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}
+
+/* =======================
+   🟣 CALLING SCREEN
+======================= */
+#calling {
+  display: none;
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+  background: black;
+  color: white;
+  justify-content: center;
+  align-items: center;
+  z-index: 9998;
+}
+
+.callingText {
+  font-size: 28px;
+  animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+/* =======================
+   📞 CALL SCREEN
+======================= */
+#callScreen {
+  display: none;
+  height: 100vh;
+  color: white;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.callBox {
+  position: relative;
+  z-index: 2;
+}
+
+.avatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: #222;
+  margin: auto;
+  border: 2px solid white;
+}
+
+.name {
+  font-size: 28px;
+  margin-top: 15px;
+}
+
+.reactions {
+  font-size: 22px;
+  margin-top: 10px;
+  animation: pop 2s infinite;
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* swipe */
+.swipeBox {
+  margin-top: 40px;
+  width: 280px;
+  height: 60px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50px;
+  position: relative;
+}
+
+.slider {
+  width: 60px;
+  height: 60px;
+  background: #34C759;
+  border-radius: 50%;
+  position: absolute;
+  left: 0;
+  cursor: pointer;
+}
+
+/* =======================
+   🎥 FACE TIME
+======================= */
+#faceTime {
+  display: none;
+  height: 100vh;
+  background: black;
+}
+
+video {
+  width: 100%;
+  height: 100vh;
+  object-fit: cover;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="ios-wallpaper"></div>
+
+<!-- 🔒 LOCK SCREEN -->
+<div id="lockScreen">
+  <div class="time">9:41</div>
+  <div class="date">Monday, May 4</div>
+  <div class="swipe">Tap to unlock</div>
+</div>
+
+<!-- 🟣 CALLING -->
+<div id="calling">
+  <div class="callingText">Calling...</div>
+</div>
+
+<!-- 📞 CALL -->
+<div id="callScreen">
+  <div class="callBox">
+
+    <div class="avatar"></div>
+    <div class="name">💖 Amelia</div>
+    <div class="reactions">🎉 ❤️ 😂 💫 😍</div>
+
+    <div class="swipeBox">
+      <div class="slider" id="slider">📞</div>
+    </div>
+
+  </div>
+
+  <audio id="ringtone" loop>
+    <source src="ringtone.mp3">
+  </audio>
+
+  <audio id="voice">
+    <source src="voice.mp3">
+  </audio>
+
+  <audio id="song">
+    <source src="birthday.mp3">
+  </audio>
+</div>
+
+<!-- 🎥 FACE TIME -->
+<div id="faceTime">
+  <video autoplay muted loop>
+    <source src="video1.mp4">
+  </video>
+</div>
+
+<script>
+
+let lock = document.getElementById("lockScreen");
+let calling = document.getElementById("calling");
+let call = document.getElementById("callScreen");
+let face = document.getElementById("faceTime");
+
+let slider = document.getElementById("slider");
+let box = document.querySelector(".swipeBox");
+
+let dragging = false;
+
+/* 📳 VIBRATION */
+function vibrate(){
+  if(navigator.vibrate){
+    navigator.vibrate([300,200,300,200,500]);
+  }
+}
+
+/* 🔒 START */
+lock.onclick = () => {
+  lock.style.display = "none";
+  startCall();
+};
+
+/* 📞 CALL FLOW */
+function startCall(){
+  calling.style.display = "flex";
+
+  setTimeout(() => {
+    calling.style.display = "none";
+    call.style.display = "flex";
+
+    document.getElementById("ringtone").play();
+    vibrate();
+  }, 2500);
+}
+
+/* 👉 SWIPE */
+slider.onmousedown = () => dragging = true;
+document.onmouseup = () => dragging = false;
+
+document.onmousemove = (e) => {
+  if(!dragging) return;
+
+  let rect = box.getBoundingClientRect();
+  let x = e.clientX - rect.left;
+
+  if(x < 0) x = 0;
+  if(x > rect.width - 60) x = rect.width - 60;
+
+  slider.style.left = x + "px";
+
+  if(x > rect.width - 80) answer();
+};
+
+/* 🎯 ANSWER */
+function answer(){
+  call.style.display = "none";
+  document.getElementById("ringtone").pause();
+
+  face.style.display = "block";
+
+  setTimeout(() => {
+    document.getElementById("voice").play();
+  }, 1500);
+
+  setTimeout(() => {
+    document.getElementById("song").play();
+  }, 2500);
+
+  confettiBurst();
+}
+
+/* 🎉 CONFETTI */
+function confettiBurst(){
+  let end = Date.now() + 4000;
+
+  (function frame(){
+    confetti({
+      particleCount: 6,
+      spread: 90,
+      origin: { y: 0.6 }
+    });
+
+    if(Date.now() < end){
+      requestAnimationFrame(frame);
+    }
+  })();
+}
+
+</script>
+
+</body>
+</html>
