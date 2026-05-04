@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Birthday Surprise</title>
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: radial-gradient(circle at center, #4a1a05 0%, #000000 100%);
+            color: white;
+            overflow: hidden;
+        }
+
+        #call-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100vh;
+            padding: 60px 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .caller-info h2 {
+            font-size: 1rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0;
+            letter-spacing: 1px;
+        }
+
+        .caller-info h1 {
+            font-size: 2.8rem;
+            font-weight: 500;
+            margin: 5px 0;
+        }
+
+        .birthday-text {
+            font-size: 1.2rem;
+            font-weight: 300;
+            color: #ffcc00; /* Gold accent */
+            letter-spacing: 3px;
+            margin-top: 20px;
+        }
+
+        .date-container {
+            font-size: 5.5rem;
+            font-weight: 700;
+            margin-top: 10px;
+            text-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+
+        .month-label {
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            border-bottom: 2px solid white;
+            padding-bottom: 5px;
+            display: inline-block;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 60px;
+        }
+
+        .slide-track {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            height: 84px;
+            border-radius: 42px;
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            position: relative;
+        }
+
+        .slide-btn {
+            width: 74px;
+            height: 74px;
+            background: #2ecc71; /* Green answer button */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            z-index: 2;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .slide-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            left: 20px;
+            color: rgba(255,255,255,0.7);
+            font-size: 1rem;
+            animation: shimmer 2.5s infinite linear;
+        }
+
+        @keyframes shimmer {
+            0% { opacity: 0.2; transform: translateX(0); }
+            50% { opacity: 1; transform: translateX(5px); }
+            100% { opacity: 0.2; transform: translateX(0); }
+        }
+
+        #video-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 10;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="ringtone" loop>
+        <source src="ringtone.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="call-screen">
+        <div class="caller-info">
+            <h2>Incoming Call</h2>
+            <h1>Alexander</h1>
+            <div class="birthday-text">HAPPY BIRTHDAY</div>
+            <div class="date-container" id="day-counter">1</div>
+            <div class="month-label">MAY</div>
+        </div>
+
+        <div class="controls">
+            <div class="slide-track" id="track">
+                <div class="slide-btn" id="slider">📞</div>
+                <span class="slide-text">slide to answer</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="video-screen">
+        <video id="birthday-video" playsinline>
+            <source src="gift image.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <script>
+        const dayCounter = document.getElementById('day-counter');
+        const slider = document.getElementById('slider');
+        const track = document.getElementById('track');
+        const callScreen = document.getElementById('call-screen');
+        const videoScreen = document.getElementById('video-screen');
+        const video = document.getElementById('birthday-video');
+        const ringtone = document.getElementById('ringtone');
+
+        let currentDay = 1;
+        const interval = setInterval(() => {
+            if (currentDay < 4) {
+                currentDay++;
+                dayCounter.innerText = currentDay;
+            } else {
+                clearInterval(interval);
+                ringtone.play().catch(() => {
+                    console.log("Interaction required for audio.");
+                });
+            }
+        }, 1000);
+
+        let isDragging = false;
+        let startX = 0;
+
+        const handleMove = (clientX) => {
+            if (!isDragging) return;
+            let moveX = clientX - startX;
+            let limit = track.offsetWidth - 84;
+            if (moveX > 0 && moveX < limit) {
+                slider.style.transform = `translateX(${moveX}px)`;
+            }
+            if (moveX >= limit - 5) {
+                handleAnswer();
+            }
+        };
+
+        slider.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startX = e.touches[0].clientX;
+        });
+
+        slider.addEventListener('touchmove', (e) => handleMove(e.touches[0].clientX));
+        
+        slider.addEventListener('touchend', () => {
+            isDragging = false;
+            slider.style.transform = `translateX(0px)`;
+        });
+
+        function handleAnswer() {
+            ringtone.pause();
+            callScreen.style.display = 'none';
+            videoScreen.style.display = 'block';
+            video.play();
+        }
+    </script>
+</body>
+</html>
