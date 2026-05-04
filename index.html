@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Birthday Surprise</title>
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: radial-gradient(circle at center, #4a1a05 0%, #000000 100%);
+            color: white;
+            overflow: hidden;
+        }
+
+        /* Call Screen Styles */
+        #call-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100vh;
+            padding: 60px 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .date-container {
+            font-size: 5rem;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .month-label {
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            border-bottom: 2px solid white;
+            padding-bottom: 5px;
+        }
+
+        /* Slide to Answer UI */
+        .controls {
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 50px;
+        }
+
+        .slide-track {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            height: 80px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .slide-btn {
+            width: 70px;
+            height: 70px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: #2ecc71;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 2;
+            transition: transform 0.1s linear;
+        }
+
+        .slide-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            left: 0;
+            color: rgba(255,255,255,0.6);
+            font-size: 1.1rem;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+
+        /* Video Screen Styles */
+        #video-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="call-screen">
+        <div class="header">
+            <h1>HAPPY<br>BIRTHDAY</h1>
+            <div class="date-container" id="day-counter">1</div>
+            <div class="month-label">MAY</div>
+        </div>
+
+        <div class="controls">
+            <div class="slide-track" id="track">
+                <div class="slide-btn" id="slider">📞</div>
+                <span class="slide-text">slide to answer</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="video-screen">
+        <video id="birthday-video" playsinline>
+            <source src="gift image.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <script>
+        const dayCounter = document.getElementById('day-counter');
+        const slider = document.getElementById('slider');
+        const track = document.getElementById('track');
+        const callScreen = document.getElementById('call-screen');
+        const videoScreen = document.getElementById('video-screen');
+        const video = document.getElementById('birthday-video');
+
+        // 1. Date Counter Logic (1st to 4th)
+        let currentDay = 1;
+        const interval = setInterval(() => {
+            if (currentDay < 4) {
+                currentDay++;
+                dayCounter.innerText = currentDay;
+            } else {
+                clearInterval(interval);
+                // Trigger ringtone here if you have an audio file
+            }
+        }, 1000);
+
+        // 2. Simple Slide Logic
+        let isDragging = false;
+        let startX = 0;
+
+        slider.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startX = e.touches[0].clientX;
+        });
+
+        slider.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            let moveX = e.touches[0].clientX - startX;
+            if (moveX > 0 && moveX < (track.offsetWidth - 80)) {
+                slider.style.transform = `translateX(${moveX}px)`;
+            }
+            if (moveX >= (track.offsetWidth - 90)) {
+                handleAnswer();
+            }
+        });
+
+        slider.addEventListener('touchend', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            slider.style.transform = `translateX(0px)`;
+        });
+
+        // Backup for Desktop Testing
+        slider.addEventListener('click', handleAnswer);
+
+        function handleAnswer() {
+            callScreen.style.display = 'none';
+            videoScreen.style.display = 'block';
+            video.play().catch(error => {
+                console.log("Auto-play blocked, playing manually.");
+                video.play();
+            });
+        }
+    </script>
+</body>
+</html>
